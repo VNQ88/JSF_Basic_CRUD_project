@@ -1,0 +1,6 @@
+.settings/
+.svn
+target/
+.classpath
+.project
+.tern-project
