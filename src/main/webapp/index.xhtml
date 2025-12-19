@@ -1,91 +1,180 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:p="http://primefaces.org/ui"> <h:head>
-    <title>Quản lý nhân viên</title>
-    <style>
-        .table-style { border-collapse: collapse; width: 80%; margin: 20px auto; }
-        .table-header { background-color: #4CAF50; color: white; padding: 10px; }
-        .table-row { text-align: center; border-bottom: 1px solid #ddd; padding: 8px; }
-        .form-container { width: 50%; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;}
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: inline-block; width: 120px; font-weight: bold;}
-    </style>
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+<h:head>
+	<title>Employee Management</title>
+	<style>
+.employee-table {
+	border-collapse: collapse;
+	width: 80%;
+	margin: 20px auto;
+}
+
+.employee-table-header {
+	background-color: #4CAF50;
+	color: white;
+	padding: 10px;
+}
+
+.employee-table-row {
+	text-align: center;
+	border-bottom: 1px solid #ddd;
+	padding: 8px;
+}
+
+.employee-form {
+	width: 50%;
+	margin: 20px auto;
+	padding: 20px;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+}
+
+.form-field {
+	margin-bottom: 15px;
+}
+
+.form-field label {
+	display: inline-block;
+	width: 120px;
+	font-weight: bold;
+}
+</style>
 </h:head>
 
 <h:body>
-    <h:form id="mainForm">
-        <h2 style="text-align:center">Quản lý nhân viên</h2>
+	<h:form id="employeeForm">
+		<h2 style="text-align: center">Employee Management</h2>
 
-        <h:panelGroup rendered="#{!employeeBean.formVisible}">
-            <div style="text-align: center; margin-bottom: 10px;">
-                <h:commandButton value="Thêm nhân viên mới" action="#{employeeBean.showAddForm}"/>
-            </div>
+		<h:panelGroup id="content">
+			<h:panelGroup rendered="#{!employeeBean.formVisible}">
+				<div style="text-align: center; margin-bottom: 10px;">
+					<h:commandButton value="Add New Employee"
+						action="#{employeeBean.showAddForm}">
+						<f:ajax execute="@this" render=":employeeForm:content" />
+					</h:commandButton>
+				</div>
 
-            <h:dataTable value="#{employeeBean.employees}" var="emp"
-                         styleClass="table-style"
-                         headerClass="table-header"
-                         rowClasses="table-row">
-                
-                <h:column><f:facet name="header">Mã NV</f:facet>#{emp.employeeCode}</h:column>
-                <h:column><f:facet name="header">Họ tên</f:facet>#{emp.employeeName}</h:column>
-                
-                <h:column><f:facet name="header">Tuổi</f:facet>#{emp.employeeAge}</h:column>
-                
-                <h:column>
-                    <f:facet name="header">Ngày Sinh</f:facet>
-                    <h:outputText value="#{emp.dateOfBirth}">
-                        <f:convertDateTime pattern="dd/MM/yyyy" />
-                    </h:outputText>
-                </h:column>
+				<h:dataTable id="employeeTable" value="#{employeeBean.employees}"
+					var="employee" styleClass="employee-table"
+					headerClass="employee-table-header" rowClasses="employee-table-row">
 
-                <h:column>
-                    <f:facet name="header">Thao tác</f:facet>
-                    <h:commandButton value="Sửa" action="#{employeeBean.showEditForm(emp)}"/>
-                    <h:commandButton value="Xóa" action="#{employeeBean.delete(emp)}"
-                                     onclick="return confirm('Xóa nhé?');"/>
-                </h:column>
-            </h:dataTable>
-        </h:panelGroup>
+					<h:column>
+						<f:facet name="header">Employee ID</f:facet>
+						<h:outputText value="#{employee.employeeCode}" />
+					</h:column>
 
-        <h:panelGroup rendered="#{employeeBean.formVisible}">
-            <div class="form-container">
-                <h3>#{employeeBean.editMode ? 'Cập nhật' : 'Thêm mới'}</h3>
-                
-                <div class="form-group">
-                    <label>Mã NV:</label>
-                    <h:inputText value="#{employeeBean.currentEmployee.employeeCode}" 
-                                 readonly="#{employeeBean.editMode}" required="true"/>
-                </div>
+					<h:column>
+						<f:facet name="header">Full Name</f:facet>
+						<h:outputText value="#{employee.employeeName}">
+							<f:converter converterId="titleCaseNameConverter" />
+						</h:outputText>
+					</h:column>
 
-                <div class="form-group">
-                    <label>Họ tên:</label>
-                    <h:inputText value="#{employeeBean.currentEmployee.employeeName}" required="true"/>
-                    
-                </div>
+					<h:column>
+						<f:facet name="header">Age</f:facet>
+						<h:outputText value="#{employee.employeeAge}" />
+					</h:column>
 
-                <div class="form-group">
-                    <label>Ngày sinh:</label>
-                    
-                    <p:datePicker value="#{employeeBean.currentEmployee.dateOfBirth}"
-                                  pattern="dd/MM/yyyy"
-                                  showIcon="true"
-                                  monthNavigator="true"
-                                  yearNavigator="true"
-                                  yearRange="1900:2025"
-                                  required="true"
-                                  requiredMessage="Vui lòng chọn ngày sinh"
-                                  />
-                </div>
+					<h:column>
+						<f:facet name="header">Date of Birth</f:facet>
+						<h:outputText value="#{employee.dateOfBirth}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</h:outputText>
+					</h:column>
 
-                <div style="text-align: center; margin-top: 20px;">
-                    <h:commandButton value="Lưu" action="#{employeeBean.save}"/>
-                    <h:commandButton value="Hủy" action="#{employeeBean.cancel}" immediate="true"/>
-                </div>
-            </div>
-        </h:panelGroup>
+					<h:column>
+						<f:facet name="header">Actions</f:facet>
 
-    </h:form>
+						<h:commandButton value="Edit"
+							action="#{employeeBean.showEditForm(employee)}">
+							<f:ajax execute="@this" render=":employeeForm:content" />
+						</h:commandButton>
+
+						<h:commandButton value="Delete"
+							action="#{employeeBean.deleteEmployee(employee)}"
+							onclick="return confirm('Are you sure you want to delete this employee?');">
+							<f:ajax execute="@this" render=":employeeForm:content" />
+						</h:commandButton>
+					</h:column>
+
+				</h:dataTable>
+			</h:panelGroup>
+
+			<h:panelGroup rendered="#{employeeBean.formVisible}">
+				<div class="employee-form">
+					<h3>#{employeeBean.editMode ? 'Update Employee' : 'Add
+						Employee'}</h3>
+
+					<h:panelGroup rendered="#{employeeBean.editMode}">
+						<div class="form-field">
+							<label>Employee ID:</label>
+							<h:outputText
+								value="#{employeeBean.currentEmployee.employeeCode}"
+								style="font-weight: bold; color: #333; margin-left: 10px;" />
+						</div>
+					</h:panelGroup>
+
+					<div class="form-field">
+						<label>Preview:</label>
+
+						<h:panelGroup id="preview">
+							<h:outputText
+								value="#{employeeBean.currentEmployee.employeeName}">
+								<f:converter converterId="titleCaseNameConverter" />
+							</h:outputText>
+						</h:panelGroup>
+					</div>
+
+					<div class="form-field">
+						<label>Full Name:</label>
+
+						<h:inputText id="employeeName"
+							value="#{employeeBean.currentEmployee.employeeName}"
+							required="true"
+							requiredMessage="Please enter the employee's full name.">
+
+							<f:validator validatorId="fullNameValidator" />
+
+							<f:ajax event="blur" render="nameMsg preview" />
+						</h:inputText>
+
+						<h:message id="nameMsg" for="employeeName"
+							style="color: red; font-style: italic; margin-left: 5px;" />
+					</div>
+
+					<div class="form-field">
+						<label>Date of Birth:</label>
+
+						<h:inputText id="dateOfBirth"
+							value="#{employeeBean.currentEmployee.dateOfBirth}"
+							required="true"
+							requiredMessage="Please enter the employee's date of birth.">
+							<f:validateRegex pattern="^[0-9/\-\s]+$" />
+							<f:converter converterId="multiDateConverter" />
+							<f:ajax event="blur" render="dobMsg" />
+						</h:inputText>
+
+						<h:message id="dobMsg" for="dateOfBirth"
+							style="color: red; font-style: italic; margin-left: 5px;" />
+					</div>
+
+					<div style="text-align: center; margin-top: 20px;">
+						<h:commandButton value="Save"
+							action="#{employeeBean.saveEmployee()}">
+							<f:ajax execute="@form" render=":employeeForm:content" />
+						</h:commandButton>
+
+						<h:commandButton value="Cancel" action="#{employeeBean.cancel}"
+							immediate="true">
+							<f:ajax execute="@this" render=":employeeForm:content" />
+						</h:commandButton>
+					</div>
+				</div>
+			</h:panelGroup>
+		</h:panelGroup>
+	</h:form>
 </h:body>
 </html>
