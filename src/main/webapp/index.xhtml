@@ -138,7 +138,7 @@
 
 							<f:validator validatorId="fullNameValidator" />
 
-							<f:ajax event="blur" render="nameMsg preview" />
+							<f:ajax event="keyup" render="nameMsg preview" delay="300"/>
 						</h:inputText>
 
 						<h:message id="nameMsg" for="employeeName"
@@ -152,9 +152,8 @@
 							value="#{employeeBean.currentEmployee.dateOfBirth}"
 							required="true"
 							requiredMessage="Please enter the employee's date of birth.">
-							<f:validateRegex pattern="^[0-9/\-\s]+$" />
 							<f:converter converterId="multiDateConverter" />
-							<f:ajax event="blur" render="dobMsg" />
+							<f:ajax event="blur" execute="@this" render="@this dobMsg" />
 						</h:inputText>
 
 						<h:message id="dobMsg" for="dateOfBirth"

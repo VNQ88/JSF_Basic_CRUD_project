@@ -12,15 +12,14 @@ import javax.faces.convert.ConverterException;
 import javax.faces.convert.FacesConverter;
 
 @FacesConverter("multiDateConverter")
-public class MultiDateConverter implements Converter<Object> {
+public class MultiDateConverter implements Converter<Date> {
 
 	private static final String DISPLAY_PATTERN = "dd/MM/yyyy";
 
-	// Ngưỡng: 00-49 => 2000-2049, 50-99 => 1950-1999
-	private static final int YY_PIVOT = 49;
+	private static final int YY_PIVOT = 40;
 
 	@Override
-	public Object getAsObject(FacesContext context, UIComponent component, String value) {
+	public Date getAsObject(FacesContext context, UIComponent component, String value) {
 		if (value == null)
 			return null;
 
@@ -28,33 +27,34 @@ public class MultiDateConverter implements Converter<Object> {
 		if (s.isEmpty())
 			return null;
 
-		s = s.replaceAll("\\s+", ""); // bỏ khoảng trắng
-		// Chuẩn hoá: nếu có / hoặc - thì tách, nếu không thì parse theo độ dài
+		s = s.replaceAll("\\s+", "");
+		if (!s.matches("^[0-9/\\-\\s]+$")) {
+			throw new ConverterException(new FacesMessage("Date of birth only accept numbers"));
+		}
 		Date parsed = parseFlexible(s);
 
 		if (parsed == null) {
-			throw new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ngày sinh không hợp lệ",
-					"Cho phép: dd/MM/yyyy, dd-MM-yyyy, ddMMyyyy, dd/MM/yy, dd-MM-yy, ddMMyy. "
-							+ "Với yy: 00-49 => 20yy, 50-99 => 19yy."));
+			throw new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid Date of Birth",
+					"Accepted formats : dd/MM/yyyy, dd-MM-yyyy, ddMMyyyy, dd/MM/yy, dd-MM-yy, ddMMyy. "
+							+ "with yy: 00-40 => 20yy, 41-99 => 19yy."));
 		}
 
 		return parsed;
+
 	}
 
 	@Override
-	public String getAsString(FacesContext context, UIComponent component, Object value) {
+	public String getAsString(FacesContext context, UIComponent component, Date value) {
 		if (value == null)
 			return "";
-		if (!(value instanceof Date))
-			return value.toString();
 
 		SimpleDateFormat out = new SimpleDateFormat(DISPLAY_PATTERN);
 		out.setLenient(false);
-		return out.format((Date) value);
+		return out.format(value);
+
 	}
 
 	private Date parseFlexible(String s) {
-		// Có phân cách / hoặc -
 		if (s.contains("/") || s.contains("-")) {
 			String sep = s.contains("/") ? "/" : "-";
 			String[] parts = s.split(java.util.regex.Pattern.quote(sep));
@@ -79,8 +79,7 @@ public class MultiDateConverter implements Converter<Object> {
 			return buildStrictDate(dd, mm, year);
 		}
 
-		// Không có phân cách: ddMMyy hoặc ddMMyyyy
-		if (s.matches("^\\d{6}$")) { // ddMMyy
+		if (s.matches("^\\d{6}$")) {
 			int dd = Integer.parseInt(s.substring(0, 2));
 			int mm = Integer.parseInt(s.substring(2, 4));
 			int yy = Integer.parseInt(s.substring(4, 6));
@@ -88,7 +87,7 @@ public class MultiDateConverter implements Converter<Object> {
 			return buildStrictDate(dd, mm, year);
 		}
 
-		if (s.matches("^\\d{8}$")) { // ddMMyyyy
+		if (s.matches("^\\d{8}$")) {
 			int dd = Integer.parseInt(s.substring(0, 2));
 			int mm = Integer.parseInt(s.substring(2, 4));
 			int year = Integer.parseInt(s.substring(4, 8));
@@ -100,12 +99,14 @@ public class MultiDateConverter implements Converter<Object> {
 
 	private int resolveTwoDigitYear(int yy) {
 		if (yy < 0 || yy > 99)
-			throw new IllegalArgumentException("yy out of range");
+			throw new ConverterException(new FacesMessage("yy out of range"));
 		return (yy <= YY_PIVOT) ? (2000 + yy) : (1900 + yy);
 	}
 
 	private Date buildStrictDate(int day, int month, int year) {
-		// month trong Calendar là 0-based
+		final int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+		if (year > currentYear)
+			throw new ConverterException(new FacesMessage("Year of DoB not exitsed"));
 		Calendar cal = Calendar.getInstance();
 		cal.setLenient(false);
 		cal.clear();
@@ -114,7 +115,7 @@ public class MultiDateConverter implements Converter<Object> {
 		cal.set(Calendar.DAY_OF_MONTH, day);
 
 		try {
-			return cal.getTime(); // sẽ throw nếu ngày không hợp lệ (vd 31/02)
+			return cal.getTime();
 		} catch (Exception e) {
 			return null;
 		}
@@ -125,4 +126,5 @@ public class MultiDateConverter implements Converter<Object> {
 			return null;
 		return Integer.parseInt(s);
 	}
+
 }
