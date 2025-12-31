@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:composite="http://xmlns.jcp.org/jsf/composite"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<composite:interface>
+    <!-- <composite:attribute name="id" required="true"/> -->
+    <composite:attribute name="label" required="true"/>
+    <composite:attribute name="value" required="true"/>
+
+    <composite:attribute name="required" type="boolean" default="false"/>
+    <composite:attribute name="requiredMessage" type="java.lang.String"/>
+    <composite:editableValueHolder name="input" targets="input"/>
+    <composite:clientBehavior name="blur"  targets="input" event="blur"  default="true" />
+    <composite:clientBehavior name="keyup" targets="input" event="keyup" />
+    <composite:attribute name="validator"
+        method-signature="void validate(javax.faces.context.FacesContext, javax.faces.component.UIComponent, java.lang.Object)"/>
+        
+    <composite:attribute name="messageStyle" type="java.lang.String"
+                         default="color: red; font-style: italic; margin-left: 5px;"/>
+</composite:interface>
+
+<composite:implementation>
+    <div class="form-field">
+        <label>#{cc.attrs.label}:</label>
+
+        <h:inputText id="input"
+                     value="#{cc.attrs.value}"
+                     required="#{cc.attrs.required}"
+                     requiredMessage="#{cc.attrs.requiredMessage}"
+                     validator="#{cc.attrs.validator}">
+			<composite:insertChildren/>
+                     
+        </h:inputText>
+
+        <h:message id="msg"
+                   for="input"
+                   style="#{cc.attrs.messageStyle}"/>
+    </div>
+</composite:implementation>
+
+</html>

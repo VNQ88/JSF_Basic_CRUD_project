@@ -1,10 +1,9 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-                xmlns:h="http://xmlns.jcp.org/jsf/html"
-                xmlns:f="http://xmlns.jcp.org/jsf/core"
-                xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+    xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 
     <h:panelGroup rendered="#{!employeeBean.formVisible}">
-
         <div style="text-align: center; margin-bottom: 10px;">
             <h:commandButton value="Add New Employee"
                              action="#{employeeBean.showAddForm}">
@@ -12,10 +11,8 @@
             </h:commandButton>
         </div>
 
-        <h:dataTable id="employeeTable"
-                     value="#{employeeBean.employees}"
-                     var="employee"
-                     styleClass="employee-table"
+        <h:dataTable id="employeeTable" value="#{employeeBean.employees}"
+                     var="employee" styleClass="employee-table"
                      headerClass="employee-table-header"
                      rowClasses="employee-table-row">
 
@@ -26,7 +23,9 @@
 
             <h:column>
                 <f:facet name="header">Full Name</f:facet>
-                <h:outputText value="#{employee.employeeName}" />
+                <h:outputText value="#{employee.employeeName}">
+                    <f:converter converterId="titleCaseNameConverter" />
+                </h:outputText>
             </h:column>
 
             <h:column>
@@ -37,7 +36,7 @@
             <h:column>
                 <f:facet name="header">Date of Birth</f:facet>
                 <h:outputText value="#{employee.dateOfBirth}">
-                    <f:convertDateTime pattern="dd/MM/yyyy" />
+                    <f:converter converterId="multiDateConverter" />
                 </h:outputText>
             </h:column>
 
@@ -57,6 +56,5 @@
             </h:column>
 
         </h:dataTable>
-
     </h:panelGroup>
 </ui:composition>

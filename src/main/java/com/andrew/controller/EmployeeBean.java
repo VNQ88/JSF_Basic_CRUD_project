@@ -4,10 +4,17 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.component.EditableValueHolder;
+import javax.faces.component.UIComponent;
+import javax.faces.context.FacesContext;
+import javax.faces.validator.ValidatorException;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -22,8 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 @Named
 @SessionScoped
 public class EmployeeBean implements Serializable {
-
+	private static final Pattern NAME_PATTERN = Pattern.compile("^[\\p{L}]+([\\s\\-'][\\p{L}]+)*$");
+	private static final int MIN_WORKING_AGE = 18;
+	private static final int MAX_WORKING_AGE = 60;
 	private static final long serialVersionUID = 1L;
+
 	@Getter
 	@Setter
 	private List<Employee> employees;
@@ -92,5 +102,41 @@ public class EmployeeBean implements Serializable {
 	public void cancel() {
 		this.formVisible = false;
 		this.currentEmployee = null;
+	}
+
+	public void fullNameValidator(FacesContext context, UIComponent component, String value) {
+		if (value == null)
+			return;
+
+		String trimmed = value.trim();
+		if (trimmed.isEmpty())
+			return;
+
+		if (!NAME_PATTERN.matcher(trimmed).matches()) {
+			if (component instanceof EditableValueHolder) {
+				((EditableValueHolder) component).setSubmittedValue(null);
+			}
+			throw new ValidatorException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid FullName",
+					"Only letters, hyphens, apostrophes, and spaces are allowed."));
+		}
+	}
+
+	public void dobRangeValidator(FacesContext context, UIComponent component, Date value) throws ValidatorException {
+		if (value == null)
+			return;
+		LocalDate dob = value.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		int birthYear = dob.getYear();
+		int currentYear = LocalDate.now().getYear();
+
+		int minYear = currentYear - MAX_WORKING_AGE;
+		int maxYear = currentYear - MIN_WORKING_AGE;
+
+		if (birthYear < minYear || birthYear > maxYear) {
+			if (component instanceof EditableValueHolder) {
+				((EditableValueHolder) component).setSubmittedValue(null);
+			}
+			throw new ValidatorException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid Date of Birth",
+					String.format("Year of birth must be between %d and %d.", minYear, maxYear)));
+		}
 	}
 }

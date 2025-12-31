@@ -3,6 +3,7 @@ package com.andrew.validator;
 import java.util.regex.Pattern;
 
 import javax.faces.application.FacesMessage;
+import javax.faces.component.EditableValueHolder;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.FacesValidator;
@@ -24,8 +25,11 @@ public class FullNameValidator implements Validator<String> {
 			return;
 
 		if (!NAME_PATTERN.matcher(trimmed).matches()) {
+			if (component instanceof EditableValueHolder) {
+				((EditableValueHolder) component).setSubmittedValue(null);
+			}
 			throw new ValidatorException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid FullName",
-					"Only letters and spaces are allowed."));
+					"Only letters, hyphens, apostrophes, and spaces are allowed."));
 		}
 	}
 }

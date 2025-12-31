@@ -24,6 +24,12 @@ public class EmployeeDAO {
 	private static final String DEFAULT_EMPLOYEE_CODE = "EMP001";
 	private static final int CODE_NUMBER_LENGTH = 3;
 
+	private static final String SELECT_ALL_EMPLOYEES_QUERY = "SELECT * FROM Mt_employee ORDER BY employee_code";
+	private static final String INSERT_EMPLOYEE_QUERY = "INSERT INTO Mt_employee (employee_code, employee_name, employee_age, date_of_birth) VALUES (?, ?, ?, ?)";
+	private static final String UPDATE_EMPLOYEE_BY_EMPLOYEE_CODE_QUERY = "UPDATE Mt_employee SET employee_name=?, employee_age=?, date_of_birth=? WHERE employee_code=?";
+	private static final String DELETE_EMPLOYEE_BY_EMPLOYEE_CODE_QUERY = "DELETE FROM Mt_employee WHERE employee_code=?";
+	private static final String SELECT_NEWEST_EMPLOYEE_CODE_QUERY = "SELECT MAX(employee_code) FROM Mt_employee";
+
 	@Inject
 	@ConfigProperty(name = "db.url")
 	private String dbUrl;
@@ -42,7 +48,6 @@ public class EmployeeDAO {
 
 	public List<Employee> getAllEmployees() {
 		List<Employee> employees = new ArrayList<>();
-		String SELECT_ALL_EMPLOYEES_QUERY = "SELECT * FROM Mt_employee ORDER BY employee_code";
 
 		try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
 				PreparedStatement stmt = conn.prepareStatement(SELECT_ALL_EMPLOYEES_QUERY);
@@ -68,8 +73,6 @@ public class EmployeeDAO {
 		String newCode = generateNextEmployeeCode();
 		employee.setEmployeeCode(newCode);
 
-		String INSERT_EMPLOYEE_QUERY = "INSERT INTO Mt_employee (employee_code, employee_name, employee_age, date_of_birth) VALUES (?, ?, ?, ?)";
-
 		try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
 				PreparedStatement stmt = conn.prepareStatement(INSERT_EMPLOYEE_QUERY)) {
 
@@ -92,7 +95,6 @@ public class EmployeeDAO {
 	}
 
 	public void updateEmployee(Employee employee) {
-		String UPDATE_EMPLOYEE_BY_EMPLOYEE_CODE_QUERY = "UPDATE Mt_employee SET employee_name=?, employee_age=?, date_of_birth=? WHERE employee_code=?";
 
 		try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
 				PreparedStatement stmt = conn.prepareStatement(UPDATE_EMPLOYEE_BY_EMPLOYEE_CODE_QUERY)) {
@@ -121,8 +123,6 @@ public class EmployeeDAO {
 	}
 
 	public void deleteEmployee(String employeeCode) {
-		String DELETE_EMPLOYEE_BY_EMPLOYEE_CODE_QUERY = "DELETE FROM Mt_employee WHERE employee_code=?";
-
 		try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
 				PreparedStatement stmt = conn.prepareStatement(DELETE_EMPLOYEE_BY_EMPLOYEE_CODE_QUERY)) {
 
@@ -140,11 +140,10 @@ public class EmployeeDAO {
 	}
 
 	private String generateNextEmployeeCode() {
-		String sql = "SELECT MAX(employee_code) FROM Mt_employee";
 		String nextCode = DEFAULT_EMPLOYEE_CODE;
 
 		try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-				PreparedStatement stmt = conn.prepareStatement(sql);
+				PreparedStatement stmt = conn.prepareStatement(SELECT_NEWEST_EMPLOYEE_CODE_QUERY);
 				ResultSet rs = stmt.executeQuery()) {
 
 			if (rs.next()) {
