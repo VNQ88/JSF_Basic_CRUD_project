@@ -1,4 +1,4 @@
-package com.andrew.controller;
+package com.andrew.beans;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.Conversation;
+import javax.enterprise.context.ConversationScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.EditableValueHolder;
 import javax.faces.component.UIComponent;
@@ -18,8 +20,8 @@ import javax.faces.validator.ValidatorException;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.andrew.dao.EmployeeDAO;
 import com.andrew.model.Employee;
+import com.andrew.service.EmployeeService;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Named
-@SessionScoped
+@ConversationScoped
 public class EmployeeBean implements Serializable {
 	private static final Pattern NAME_PATTERN = Pattern.compile("^[\\p{L}]+([\\s\\-'][\\p{L}]+)*$");
 	private static final int MIN_WORKING_AGE = 18;
@@ -49,7 +51,10 @@ public class EmployeeBean implements Serializable {
 	private boolean isEditMode;
 
 	@Inject
-	private EmployeeDAO employeeDAO;
+	private EmployeeService employeeService;;
+
+	@Inject
+	private Conversation conversation;
 
 	@PostConstruct
 	public void init() {
@@ -57,17 +62,38 @@ public class EmployeeBean implements Serializable {
 		this.formVisible = false;
 	}
 
+	@PreDestroy
+	public void destroy() {
+		log.info("EmployeeBean destroyed. cid={}", conversation == null ? "null" : conversation.getId());
+	}
+
+	private void beginConversation() {
+		if (conversation.isTransient()) {
+			conversation.begin();
+			log.info("Conversation BEGIN, id={}", conversation.getId());
+		}
+	}
+
+	private void endConversation() {
+		if (!conversation.isTransient()) {
+			log.info("Conversation END, id={}", conversation.getId());
+			conversation.end();
+		}
+	}
+
 	private void loadEmployees() {
-		this.employees = employeeDAO.getAllEmployees();
+		this.employees = employeeService.getAllEmployees();
 	}
 
 	public void showAddForm() {
+		beginConversation();
 		this.currentEmployee = new Employee();
 		this.isEditMode = false;
 		this.formVisible = true;
 	}
 
 	public void showEditForm(Employee emp) {
+		beginConversation();
 		this.currentEmployee = new Employee(emp.getEmployeeCode(), emp.getEmployeeName(), emp.getEmployeeAge(),
 				emp.getDateOfBirth());
 		this.isEditMode = true;
@@ -86,22 +112,24 @@ public class EmployeeBean implements Serializable {
 		}
 
 		if (isEditMode) {
-			employeeDAO.updateEmployee(currentEmployee);
+			employeeService.updateEmployee(currentEmployee);
 		} else {
-			employeeDAO.insertEmployee(currentEmployee);
+			employeeService.insertEmployee(currentEmployee);
 		}
 		loadEmployees();
 		this.formVisible = false;
+		endConversation();
 	}
 
 	public void deleteEmployee(Employee emp) {
-		employeeDAO.deleteEmployee(emp.getEmployeeCode());
+		employeeService.deleteEmployee(emp.getEmployeeCode());
 		loadEmployees();
 	}
 
 	public void cancel() {
 		this.formVisible = false;
 		this.currentEmployee = null;
+		endConversation();
 	}
 
 	public void fullNameValidator(FacesContext context, UIComponent component, String value) {
@@ -138,5 +166,9 @@ public class EmployeeBean implements Serializable {
 			throw new ValidatorException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid Date of Birth",
 					String.format("Year of birth must be between %d and %d.", minYear, maxYear)));
 		}
+	}
+
+	public String getCid() {
+		return (conversation != null && !conversation.isTransient()) ? conversation.getId() : null;
 	}
 }

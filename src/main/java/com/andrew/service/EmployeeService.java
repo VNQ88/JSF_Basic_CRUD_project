@@ -1,4 +1,4 @@
-package com.andrew.dao;
+package com.andrew.service;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ApplicationScoped
-public class EmployeeDAO {
+public class EmployeeService {
 
 	private static final String DEFAULT_EMPLOYEE_CODE = "EMP001";
 	private static final int CODE_NUMBER_LENGTH = 3;
