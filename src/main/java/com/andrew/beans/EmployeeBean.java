@@ -167,8 +167,4 @@ public class EmployeeBean implements Serializable {
 					String.format("Year of birth must be between %d and %d.", minYear, maxYear)));
 		}
 	}
-
-	public String getCid() {
-		return (conversation != null && !conversation.isTransient()) ? conversation.getId() : null;
-	}
 }
